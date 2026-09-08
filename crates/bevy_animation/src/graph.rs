@@ -287,7 +287,7 @@ pub enum AnimationGraphLoadError {
 /// modified, and removed.
 #[derive(Default, Reflect, Resource)]
 pub struct ThreadedAnimationGraphs(
-    pub(crate) HashMap<AssetId<AnimationGraph>, ThreadedAnimationGraph>,
+    pub HashMap<AssetId<AnimationGraph>, ThreadedAnimationGraph>,
 );
 
 /// An acceleration structure for an animation graph that allows Bevy to

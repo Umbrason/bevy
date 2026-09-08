@@ -1353,7 +1353,7 @@ impl AnimationEvaluationState {
     /// that we've been building up for a single target.
     ///
     /// The given `node_index` is the node that we're evaluating.
-    fn blend_all(
+    pub fn blend_all(
         &mut self,
         node_index: AnimationNodeIndex,
     ) -> Result<(), AnimationEvaluationError> {
@@ -1370,7 +1370,7 @@ impl AnimationEvaluationState {
     /// that we've been building up for a single target.
     ///
     /// The given `node_index` is the node that we're evaluating.
-    fn add_all(&mut self, node_index: AnimationNodeIndex) -> Result<(), AnimationEvaluationError> {
+    pub fn add_all(&mut self, node_index: AnimationNodeIndex) -> Result<(), AnimationEvaluationError> {
         for curve_evaluator_type in self.current_evaluators.keys() {
             self.evaluators
                 .get_mut(curve_evaluator_type)
@@ -1386,7 +1386,7 @@ impl AnimationEvaluationState {
     /// The `weight` parameter is the weight that should be pushed onto the
     /// stack, while the `node_index` parameter is the node that we're
     /// evaluating.
-    fn push_blend_register_all(
+    pub fn push_blend_register_all(
         &mut self,
         weight: f32,
         node_index: AnimationNodeIndex,
@@ -1405,7 +1405,7 @@ impl AnimationEvaluationState {
     ///
     /// This is the call that actually writes the computed values into the
     /// components being animated.
-    fn commit_all(
+    pub fn commit_all(
         &mut self,
         mut entity_mut: AnimationEntityMut,
     ) -> Result<(), AnimationEvaluationError> {

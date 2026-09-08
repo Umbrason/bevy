@@ -112,14 +112,14 @@ pub struct AnimationClip {
 
 #[derive(Reflect, Debug, Clone)]
 #[reflect(Clone)]
-struct TimedAnimationEvent {
+pub struct TimedAnimationEvent {
     time: f32,
     event: AnimationEventData,
 }
 
 #[derive(Reflect, Debug, Clone)]
 #[reflect(Clone)]
-struct AnimationEventData {
+pub struct AnimationEventData {
     #[reflect(ignore, clone)]
     trigger: AnimationEventFn,
 }
@@ -508,25 +508,25 @@ pub enum AnimationEvaluationError {
 #[reflect(Clone, Default)]
 pub struct ActiveAnimation {
     /// The factor by which the weight from the [`AnimationGraph`] is multiplied.
-    weight: f32,
-    repeat: RepeatAnimation,
-    speed: f32,
+    pub weight: f32,
+    pub repeat: RepeatAnimation,
+    pub speed: f32,
     /// Total time the animation has been played.
     ///
     /// Note: Time does not increase when the animation is paused or after it has completed.
-    elapsed: f32,
+    pub elapsed: f32,
     /// The timestamp inside of the animation clip.
     ///
     /// Note: This will always be in the range [0.0, animation clip duration]
-    seek_time: f32,
+    pub seek_time: f32,
     /// The `seek_time` of the previous tick, if any.
-    last_seek_time: Option<f32>,
+    pub last_seek_time: Option<f32>,
     /// Number of times the animation has completed.
     /// If the animation is playing in reverse, this increments when the animation passes the start.
-    completions: u32,
+    pub completions: u32,
     /// `true` if the animation was completed at least once this tick.
-    just_completed: bool,
-    paused: bool,
+    pub just_completed: bool,
+    pub paused: bool,
 }
 
 impl Default for ActiveAnimation {
@@ -560,7 +560,7 @@ impl ActiveAnimation {
 
     /// Update the animation given the delta time and the duration of the clip being played.
     #[inline]
-    fn update(&mut self, delta: f32, clip_duration: f32) {
+    pub fn update(&mut self, delta: f32, clip_duration: f32) {
         self.just_completed = false;
         self.last_seek_time = Some(self.seek_time);
 
@@ -730,7 +730,7 @@ impl ActiveAnimation {
 #[derive(Component, Default, Reflect)]
 #[reflect(Component, Default, Clone)]
 pub struct AnimationPlayer {
-    active_animations: HashMap<AnimationNodeIndex, ActiveAnimation>,
+    pub active_animations: HashMap<AnimationNodeIndex, ActiveAnimation>,
 }
 
 // This is needed since `#[derive(Clone)]` does not generate optimized `clone_from`.
@@ -761,21 +761,21 @@ pub struct AnimationEvaluationState {
     /// current [`AnimationPlayer`] doesn't animate. To iterate only over the
     /// properties that are currently being animated, consult the
     /// [`Self::current_evaluators`] set.
-    evaluators: AnimationCurveEvaluators,
+    pub evaluators: AnimationCurveEvaluators,
 
     /// The set of [`AnimationCurveEvaluator`] types that the current
     /// [`AnimationPlayer`] is animating.
     ///
     /// This is built up as new curve evaluators are encountered during graph
     /// traversal.
-    current_evaluators: CurrentEvaluators,
+    pub current_evaluators: CurrentEvaluators,
 }
 
 #[derive(Default)]
 struct AnimationCurveEvaluators {
-    component_property_curve_evaluators:
+    pub component_property_curve_evaluators:
         PreHashMap<(TypeId, usize), Box<dyn AnimationCurveEvaluator>>,
-    type_id_curve_evaluators: TypeIdMap<Box<dyn AnimationCurveEvaluator>>,
+    pub type_id_curve_evaluators: TypeIdMap<Box<dyn AnimationCurveEvaluator>>,
 }
 
 impl AnimationCurveEvaluators {
@@ -813,9 +813,9 @@ impl AnimationCurveEvaluators {
 }
 
 #[derive(Default)]
-struct CurrentEvaluators {
-    component_properties: PreHashMap<(TypeId, usize), ()>,
-    type_ids: TypeIdMap<()>,
+pub struct CurrentEvaluators {
+    pub component_properties: PreHashMap<(TypeId, usize), ()>,
+    pub type_ids: TypeIdMap<()>,
 }
 
 impl CurrentEvaluators {
@@ -986,7 +986,7 @@ impl AnimationPlayer {
 }
 
 /// A system that triggers untargeted animation events for the currently-playing animations.
-fn trigger_untargeted_animation_events(
+pub fn trigger_untargeted_animation_events(
     mut commands: Commands,
     clips: Res<Assets<AnimationClip>>,
     graphs: Res<Assets<AnimationGraph>>,
@@ -1420,14 +1420,14 @@ impl AnimationEvaluationState {
 
 /// All the events from an [`AnimationClip`] that occurred this tick.
 #[derive(Debug, Clone)]
-struct TriggeredEvents<'a> {
+pub struct TriggeredEvents<'a> {
     direction: TriggeredEventsDir,
     lower: &'a [TimedAnimationEvent],
     upper: &'a [TimedAnimationEvent],
 }
 
 impl<'a> TriggeredEvents<'a> {
-    fn from_animation(
+    pub fn from_animation(
         target: AnimationEventTarget,
         clip: &'a AnimationClip,
         active_animation: &ActiveAnimation,
@@ -1504,11 +1504,11 @@ impl<'a> TriggeredEvents<'a> {
         })
     }
 
-    fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.lower.is_empty() && self.upper.is_empty()
     }
 
-    fn iter(&self) -> TriggeredEventsIter<'_> {
+    pub fn iter(&self) -> TriggeredEventsIter<'_> {
         match self.direction {
             TriggeredEventsDir::Forward => TriggeredEventsIter::Forward(self.lower.iter()),
             TriggeredEventsDir::Reverse => TriggeredEventsIter::Reverse(self.lower.iter().rev()),
@@ -1525,7 +1525,7 @@ impl<'a> TriggeredEvents<'a> {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum TriggeredEventsDir {
+pub enum TriggeredEventsDir {
     /// The animation is playing normally
     Forward,
     /// The animation is playing in reverse
@@ -1537,7 +1537,7 @@ enum TriggeredEventsDir {
 }
 
 #[derive(Debug, Clone)]
-enum TriggeredEventsIter<'a> {
+pub enum TriggeredEventsIter<'a> {
     Forward(slice::Iter<'a, TimedAnimationEvent>),
     Reverse(iter::Rev<slice::Iter<'a, TimedAnimationEvent>>),
     ForwardLooping {

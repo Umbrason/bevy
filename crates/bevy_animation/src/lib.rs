@@ -105,27 +105,27 @@ impl VariableCurve {
 pub struct AnimationClip {
     // This field is ignored by reflection because AnimationCurves can contain things that are not reflect-able
     #[reflect(ignore, clone)]
-    curves: AnimationCurves,
-    events: AnimationEvents,
-    duration: f32,
+    pub curves: AnimationCurves,
+    pub events: AnimationEvents,
+    pub duration: f32,
 }
 
 #[derive(Reflect, Debug, Clone)]
 #[reflect(Clone)]
 pub struct TimedAnimationEvent {
-    time: f32,
-    event: AnimationEventData,
+    pub time: f32,
+    pub event: AnimationEventData,
 }
 
 #[derive(Reflect, Debug, Clone)]
 #[reflect(Clone)]
 pub struct AnimationEventData {
     #[reflect(ignore, clone)]
-    trigger: AnimationEventFn,
+    pub trigger: AnimationEventFn,
 }
 
 impl AnimationEventData {
-    fn trigger(&self, commands: &mut Commands, entity: Entity, time: f32, weight: f32) {
+    pub fn trigger(&self, commands: &mut Commands, entity: Entity, time: f32, weight: f32) {
         (self.trigger.0)(commands, entity, time, weight);
     }
 }
@@ -1370,7 +1370,10 @@ impl AnimationEvaluationState {
     /// that we've been building up for a single target.
     ///
     /// The given `node_index` is the node that we're evaluating.
-    pub fn add_all(&mut self, node_index: AnimationNodeIndex) -> Result<(), AnimationEvaluationError> {
+    pub fn add_all(
+        &mut self,
+        node_index: AnimationNodeIndex,
+    ) -> Result<(), AnimationEvaluationError> {
         for curve_evaluator_type in self.current_evaluators.keys() {
             self.evaluators
                 .get_mut(curve_evaluator_type)

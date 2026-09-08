@@ -149,7 +149,7 @@ impl Debug for AnimationEventFn {
 
 #[derive(Reflect, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[reflect(Clone)]
-enum AnimationEventTarget {
+pub enum AnimationEventTarget {
     Root,
     Node(AnimationTargetId),
 }

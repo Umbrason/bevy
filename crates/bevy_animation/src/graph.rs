@@ -849,7 +849,7 @@ pub struct NonPathHandleError;
 ///
 /// The [`ThreadedAnimationGraph`] contains acceleration structures that allow
 /// for quick evaluation of that graph's animations.
-pub(crate) fn thread_animation_graphs(
+pub fn thread_animation_graphs(
     mut threaded_animation_graphs: ResMut<ThreadedAnimationGraphs>,
     animation_graphs: Res<Assets<AnimationGraph>>,
     mut animation_graph_asset_events: MessageReader<AssetEvent<AnimationGraph>>,

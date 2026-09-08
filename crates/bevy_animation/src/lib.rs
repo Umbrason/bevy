@@ -780,7 +780,7 @@ struct AnimationCurveEvaluators {
 
 impl AnimationCurveEvaluators {
     #[inline]
-    pub(crate) fn get_mut(&mut self, id: EvaluatorId) -> Option<&mut dyn AnimationCurveEvaluator> {
+    pub fn get_mut(&mut self, id: EvaluatorId) -> Option<&mut dyn AnimationCurveEvaluator> {
         match id {
             EvaluatorId::ComponentField(component_property) => self
                 .component_property_curve_evaluators
@@ -791,7 +791,7 @@ impl AnimationCurveEvaluators {
     }
 
     #[inline]
-    pub(crate) fn get_or_insert_with(
+    pub fn get_or_insert_with(
         &mut self,
         id: EvaluatorId,
         func: impl FnOnce() -> Box<dyn AnimationCurveEvaluator>,
@@ -819,14 +819,14 @@ pub struct CurrentEvaluators {
 }
 
 impl CurrentEvaluators {
-    pub(crate) fn keys(&self) -> impl Iterator<Item = EvaluatorId<'_>> {
+    pub fn keys(&self) -> impl Iterator<Item = EvaluatorId<'_>> {
         self.component_properties
             .keys()
             .map(EvaluatorId::ComponentField)
             .chain(self.type_ids.keys().copied().map(EvaluatorId::Type))
     }
 
-    pub(crate) fn clear(
+    pub fn clear(
         &mut self,
         mut visit: impl FnMut(EvaluatorId) -> Result<(), AnimationEvaluationError>,
     ) -> Result<(), AnimationEvaluationError> {
@@ -842,7 +842,7 @@ impl CurrentEvaluators {
     }
 
     #[inline]
-    pub(crate) fn insert(&mut self, id: EvaluatorId) {
+    pub fn insert(&mut self, id: EvaluatorId) {
         match id {
             EvaluatorId::ComponentField(component_property) => {
                 self.component_properties.insert(*component_property, ());

@@ -772,7 +772,7 @@ pub struct AnimationEvaluationState {
 }
 
 #[derive(Default)]
-struct AnimationCurveEvaluators {
+pub struct AnimationCurveEvaluators {
     pub component_property_curve_evaluators:
         PreHashMap<(TypeId, usize), Box<dyn AnimationCurveEvaluator>>,
     pub type_id_curve_evaluators: TypeIdMap<Box<dyn AnimationCurveEvaluator>>,

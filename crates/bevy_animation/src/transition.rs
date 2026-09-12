@@ -12,6 +12,7 @@ use bevy_ecs::{
 use bevy_reflect::{std_traits::ReflectDefault, Reflect};
 use bevy_time::Time;
 use core::time::Duration;
+use tracing::warn;
 
 use crate::{graph::AnimationNodeIndex, ActiveAnimation, AnimationPlayer};
 
@@ -107,9 +108,17 @@ impl AnimationTransitions {
     }
 }
 
+/// dummy system to make bevy happy
+pub fn advance_transitions(
+    mut _query: Query<(&mut AnimationTransitions, &mut AnimationPlayer)>,
+    _time: Res<Time>,
+) {
+    warn!("this system should not be used");
+}
+
 /// A system that alters the weight of currently-playing transitions based on
 /// the current time and decline amount.
-pub fn advance_transitions<T: Component>(
+pub fn advance_transitions_filtered<T: Component>(
     mut query: Query<(&mut AnimationTransitions, &mut AnimationPlayer), Without<T>>,
     time: Res<Time>,
 ) {
@@ -143,9 +152,16 @@ pub fn advance_transitions<T: Component>(
     }
 }
 
+/// dummy system to make bevy happy
+pub fn expire_completed_transitions(
+    mut _query: Query<(&mut AnimationTransitions, &mut AnimationPlayer)>,
+) {
+    warn!("this system should not be used");
+}
+
 /// A system that removed transitions that have completed from the
 /// [`AnimationTransitions`] object.
-pub fn expire_completed_transitions<T: Component>(
+pub fn expire_completed_transitions_filtered<T: Component>(
     mut query: Query<(&mut AnimationTransitions, &mut AnimationPlayer), Without<T>>,
 ) {
     for (mut animation_transitions, mut player) in query.iter_mut() {

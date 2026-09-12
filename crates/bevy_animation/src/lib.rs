@@ -40,7 +40,9 @@ use crate::{
 
 use bevy_app::{AnimationSystems, App, Plugin, PostUpdate};
 use bevy_asset::{Asset, AssetApp, AssetEventSystems, Assets};
-use bevy_ecs::{entity_disabling::Disabled, prelude::*, resource::IsResource, world::EntityMutExcept};
+use bevy_ecs::{
+    entity_disabling::Disabled, prelude::*, resource::IsResource, world::EntityMutExcept,
+};
 use bevy_math::FloatOrd;
 use bevy_platform::{collections::HashMap, hash::NoOpHash};
 use bevy_reflect::{prelude::ReflectDefault, Reflect, TypePath};
@@ -66,7 +68,7 @@ pub mod prelude {
 use crate::{
     animation_curves::AnimationCurve,
     graph::{AnimationGraph, AnimationGraphAssetLoader, AnimationNodeIndex},
-    transition::{advance_transitions, expire_completed_transitions},
+    transition::{advance_transitions_filtered, expire_completed_transitions_filtered},
 };
 use alloc::sync::Arc;
 
@@ -986,8 +988,18 @@ impl AnimationPlayer {
     }
 }
 
+/// dummy system to make bevy happy
+pub fn trigger_untargeted_animation_events(
+    mut _commands: Commands,
+    _clips: Res<Assets<AnimationClip>>,
+    _graphs: Res<Assets<AnimationGraph>>,
+    _players: Query<(Entity, &AnimationPlayer, &AnimationGraphHandle)>,
+) {
+    warn!("this system should not be used");
+}
+
 /// A system that triggers untargeted animation events for the currently-playing animations.
-pub fn trigger_untargeted_animation_events<T: Component>(
+pub fn trigger_untargeted_animation_events_filtered<T: Component>(
     mut commands: Commands,
     clips: Res<Assets<AnimationClip>>,
     graphs: Res<Assets<AnimationGraph>>,
@@ -1028,8 +1040,18 @@ pub fn trigger_untargeted_animation_events<T: Component>(
     }
 }
 
+/// dummy system to make bevy happy
+pub fn advance_animations(
+    _time: Res<Time>,
+    _animation_clips: Res<Assets<AnimationClip>>,
+    _animation_graphs: Res<Assets<AnimationGraph>>,
+    mut _players: Query<(&mut AnimationPlayer, &AnimationGraphHandle)>,
+) {
+    warn!("this system should not be used");
+}
+
 /// A system that advances the time for all playing animations.
-pub fn advance_animations<T: Component>(
+pub fn advance_animations_filtered<T: Component>(
     time: Res<Time>,
     animation_clips: Res<Assets<AnimationClip>>,
     animation_graphs: Res<Assets<AnimationGraph>>,
@@ -1078,9 +1100,25 @@ pub type AnimationEntityMut<'w, 's> = EntityMutExcept<
     ),
 >;
 
+/// dummy system to make bevy happy
+pub fn animate_targets(
+    _par_commands: ParallelCommands,
+    _clips: Res<Assets<AnimationClip>>,
+    _graphs: Res<Assets<AnimationGraph>>,
+    _threaded_animation_graphs: Res<ThreadedAnimationGraphs>,
+    _players: Query<(&AnimationPlayer, &AnimationGraphHandle)>,
+    mut _targets: Query<
+        (Entity, &AnimationTargetId, &AnimatedBy, AnimationEntityMut),
+        Without<IsResource>,
+    >,
+    _animation_evaluation_state: Local<ThreadLocal<RefCell<AnimationEvaluationState>>>,
+) {
+    warn!("this system should not be used");
+}
+
 /// A system that modifies animation targets (e.g. bones in a skinned mesh)
 /// according to the currently-playing animations.
-pub fn animate_targets<T: Component>(
+pub fn animate_targets_filtered<T: Component>(
     par_commands: ParallelCommands,
     clips: Res<Assets<AnimationClip>>,
     graphs: Res<Assets<AnimationGraph>>,
@@ -1267,13 +1305,22 @@ pub fn animate_targets<T: Component>(
         });
 }
 
+/// Dummy plugin to make bevy default stuff happy
+pub struct AnimationPlugin;
+
+impl Plugin for AnimationPlugin {
+    fn build(&self, app: &mut App) {
+        warn!("just a dummy, replace with FilteredAnimationPlugin!")
+    }
+}
+
 /// Adds animation support to an app
 #[derive(Default)]
-pub struct AnimationPlugin<T: Component = Disabled> {
+pub struct FilteredAnimationPlugin<T: Component> {
     phantom_data: PhantomData<T>,
 }
 
-impl<T: Component> Plugin for AnimationPlugin<T> {
+impl<T: Component> Plugin for FilteredAnimationPlugin<T> {
     fn build(&self, app: &mut App) {
         app.init_asset::<AnimationClip>()
             .init_asset::<AnimationGraph>()
@@ -1285,17 +1332,17 @@ impl<T: Component> Plugin for AnimationPlugin<T> {
                 PostUpdate,
                 (
                     graph::thread_animation_graphs.before(AssetEventSystems),
-                    advance_transitions::<T>,
-                    advance_animations::<T>,
+                    advance_transitions_filtered::<T>,
+                    advance_animations_filtered::<T>,
                     // TODO: `animate_targets` can animate anything, so
                     // ambiguity testing currently considers it ambiguous with
                     // every other system in `PostUpdate`. We may want to move
                     // it to its own system set after `Update` but before
                     // `PostUpdate`. For now, we just disable ambiguity testing
                     // for this system.
-                    animate_targets::<T>.ambiguous_with_all(),
-                    trigger_untargeted_animation_events::<T>,
-                    expire_completed_transitions::<T>,
+                    animate_targets_filtered::<T>.ambiguous_with_all(),
+                    trigger_untargeted_animation_events_filtered::<T>,
+                    expire_completed_transitions_filtered::<T>,
                 )
                     .chain()
                     .in_set(AnimationSystems)

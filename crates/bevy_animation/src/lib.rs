@@ -40,7 +40,7 @@ use crate::{
 
 use bevy_app::{AnimationSystems, App, Plugin, PostUpdate};
 use bevy_asset::{Asset, AssetApp, AssetEventSystems, Assets};
-use bevy_ecs::{prelude::*, resource::IsResource, world::EntityMutExcept};
+use bevy_ecs::{entity_disabling::Disabled, prelude::*, resource::IsResource, world::EntityMutExcept};
 use bevy_math::FloatOrd;
 use bevy_platform::{collections::HashMap, hash::NoOpHash};
 use bevy_reflect::{prelude::ReflectDefault, Reflect, TypePath};
@@ -1269,7 +1269,7 @@ pub fn animate_targets<T: Component>(
 
 /// Adds animation support to an app
 #[derive(Default)]
-pub struct AnimationPlugin<T: Component> {
+pub struct AnimationPlugin<T: Component = Disabled> {
     phantom_data: PhantomData<T>,
 }
 

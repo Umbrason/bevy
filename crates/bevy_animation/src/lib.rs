@@ -31,6 +31,7 @@ use core::{
 };
 use graph::AnimationNodeType;
 use prelude::AnimationCurveEvaluator;
+use std::marker::PhantomData;
 
 use crate::{
     graph::{AnimationGraphHandle, ThreadedAnimationGraphs},
@@ -986,11 +987,11 @@ impl AnimationPlayer {
 }
 
 /// A system that triggers untargeted animation events for the currently-playing animations.
-pub fn trigger_untargeted_animation_events(
+pub fn trigger_untargeted_animation_events<T: Component>(
     mut commands: Commands,
     clips: Res<Assets<AnimationClip>>,
     graphs: Res<Assets<AnimationGraph>>,
-    players: Query<(Entity, &AnimationPlayer, &AnimationGraphHandle)>,
+    players: Query<(Entity, &AnimationPlayer, &AnimationGraphHandle), Without<T>>,
 ) {
     for (entity, player, graph_id) in &players {
         // The graph might not have loaded yet. Safely bail.
@@ -1028,11 +1029,11 @@ pub fn trigger_untargeted_animation_events(
 }
 
 /// A system that advances the time for all playing animations.
-pub fn advance_animations(
+pub fn advance_animations<T: Component>(
     time: Res<Time>,
     animation_clips: Res<Assets<AnimationClip>>,
     animation_graphs: Res<Assets<AnimationGraph>>,
-    mut players: Query<(&mut AnimationPlayer, &AnimationGraphHandle)>,
+    mut players: Query<(&mut AnimationPlayer, &AnimationGraphHandle), Without<T>>,
 ) {
     let delta_seconds = time.delta_secs();
     players
@@ -1079,12 +1080,12 @@ pub type AnimationEntityMut<'w, 's> = EntityMutExcept<
 
 /// A system that modifies animation targets (e.g. bones in a skinned mesh)
 /// according to the currently-playing animations.
-pub fn animate_targets(
+pub fn animate_targets<T: Component>(
     par_commands: ParallelCommands,
     clips: Res<Assets<AnimationClip>>,
     graphs: Res<Assets<AnimationGraph>>,
     threaded_animation_graphs: Res<ThreadedAnimationGraphs>,
-    players: Query<(&AnimationPlayer, &AnimationGraphHandle)>,
+    players: Query<(&AnimationPlayer, &AnimationGraphHandle), Without<T>>,
     mut targets: Query<
         (Entity, &AnimationTargetId, &AnimatedBy, AnimationEntityMut),
         Without<IsResource>,
@@ -1099,13 +1100,6 @@ pub fn animate_targets(
                 if let Ok((player, graph_handle)) = players.get(player_id) {
                     (player, graph_handle.id())
                 } else {
-                    trace!(
-                        "Either an animation player {} or a graph was missing for the target \
-                         entity {} ({:?}); no animations will play this frame",
-                        player_id,
-                        entity_mut.id(),
-                        entity_mut.get::<Name>(),
-                    );
                     return;
                 };
 
@@ -1275,9 +1269,11 @@ pub fn animate_targets(
 
 /// Adds animation support to an app
 #[derive(Default)]
-pub struct AnimationPlugin;
+pub struct AnimationPlugin<T: Component> {
+    phantom_data: PhantomData<T>,
+}
 
-impl Plugin for AnimationPlugin {
+impl<T: Component> Plugin for AnimationPlugin<T> {
     fn build(&self, app: &mut App) {
         app.init_asset::<AnimationClip>()
             .init_asset::<AnimationGraph>()
@@ -1289,17 +1285,17 @@ impl Plugin for AnimationPlugin {
                 PostUpdate,
                 (
                     graph::thread_animation_graphs.before(AssetEventSystems),
-                    advance_transitions,
-                    advance_animations,
+                    advance_transitions::<T>,
+                    advance_animations::<T>,
                     // TODO: `animate_targets` can animate anything, so
                     // ambiguity testing currently considers it ambiguous with
                     // every other system in `PostUpdate`. We may want to move
                     // it to its own system set after `Update` but before
                     // `PostUpdate`. For now, we just disable ambiguity testing
                     // for this system.
-                    animate_targets.ambiguous_with_all(),
-                    trigger_untargeted_animation_events,
-                    expire_completed_transitions,
+                    animate_targets::<T>.ambiguous_with_all(),
+                    trigger_untargeted_animation_events::<T>,
+                    expire_completed_transitions::<T>,
                 )
                     .chain()
                     .in_set(AnimationSystems)

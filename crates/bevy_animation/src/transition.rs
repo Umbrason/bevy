@@ -5,6 +5,7 @@
 
 use bevy_ecs::{
     component::Component,
+    query::Without,
     reflect::ReflectComponent,
     system::{Query, Res},
 };
@@ -108,8 +109,8 @@ impl AnimationTransitions {
 
 /// A system that alters the weight of currently-playing transitions based on
 /// the current time and decline amount.
-pub fn advance_transitions(
-    mut query: Query<(&mut AnimationTransitions, &mut AnimationPlayer)>,
+pub fn advance_transitions<T: Component>(
+    mut query: Query<(&mut AnimationTransitions, &mut AnimationPlayer), Without<T>>,
     time: Res<Time>,
 ) {
     // We use a "greedy layer" system here. The top layer (most recent
@@ -144,8 +145,8 @@ pub fn advance_transitions(
 
 /// A system that removed transitions that have completed from the
 /// [`AnimationTransitions`] object.
-pub fn expire_completed_transitions(
-    mut query: Query<(&mut AnimationTransitions, &mut AnimationPlayer)>,
+pub fn expire_completed_transitions<T: Component>(
+    mut query: Query<(&mut AnimationTransitions, &mut AnimationPlayer), Without<T>>,
 ) {
     for (mut animation_transitions, mut player) in query.iter_mut() {
         animation_transitions.transitions.retain(|transition| {

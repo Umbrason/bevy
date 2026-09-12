@@ -1306,6 +1306,7 @@ pub fn animate_targets_filtered<T: Component>(
 }
 
 /// Dummy plugin to make bevy default stuff happy
+#[derive(Default)]
 pub struct AnimationPlugin;
 
 impl Plugin for AnimationPlugin {
